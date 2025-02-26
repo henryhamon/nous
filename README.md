@@ -43,8 +43,25 @@ Create a .env file in the root directory and add your credentials
 NOTION_API_KEY=your_notion_api_key
 NOTION_DATABASE_ID=your_notion_database_id
  ```
+### 4. Create a Notion Database
 
-### 4.	Run the application:
+You must create a database on Notion with the following properties:
+
+Property Name	Type
+Content	Text
+Date	Date
+Keywords	Multi-select
+Description	Text
+Summary	checkbox
+Abstract	Text
+URL	URL
+Read	Checkbox
+
+	1.	Open Notion and create a new database.
+	2.	Add the properties listed above.
+	3.	Copy the Database ID from the URL (it appears after notion.so/ and before the question mark).
+ 
+### 5.	Run the application:
 
  ```sh
 
