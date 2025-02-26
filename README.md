@@ -37,9 +37,12 @@ pip install -r requirements.txt
 
 ### 3.	Set up environment variables:
 
+Create a .env file in the root directory and add your credentials
+
+ ```sh
 NOTION_API_KEY=your_notion_api_key
 NOTION_DATABASE_ID=your_notion_database_id
-
+ ```
 
 ### 4.	Run the application:
 
