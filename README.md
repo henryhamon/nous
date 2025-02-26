@@ -15,7 +15,8 @@ Nous is a personal project designed to enhance productivity by leveraging Large 
 - **Python 3.9**  
 - **LangChain**: LLM orchestration and processing.  
 - **Notion API**: Storing and organizing article summaries.  
-- **LiteQueue**: Lightweight task queue for managing article processing.  
+- **LiteQueue**: Lightweight task queue for managing article processing.
+- **python-dotenv**: Manages environment variables.  
 
 ## Setup
 
@@ -36,15 +37,17 @@ pip install -r requirements.txt
 
 ### 3.	Set up environment variables:
 
-export NOTION_API_KEY="your_notion_api_key"
-export NOTION_DATABASE_ID="your_notion_database_id"
+NOTION_API_KEY=your_notion_api_key
+NOTION_DATABASE_ID=your_notion_database_id
 
 
 ### 4.	Run the application:
 
+ ```sh
+
 python main.py
 
-
+ ```
 
 ## Roadmap
 
