@@ -1,0 +1,2 @@
+# nous
+my second brain
