@@ -19,38 +19,42 @@ Nous is a personal project designed to enhance productivity by leveraging Large 
 
 ## Setup
 
-1. Clone the repository:
+### 1. Clone the repository:
+
    ```sh
-   git clone https://github.com/yourusername/nous.git
+   git clone https://github.com/henryhamon/nous.git
    cd nous
+```
 
-	2.	Create a virtual environment and install dependencies:
+### 2.	Create a virtual environment and install dependencies:
 
+ ```sh
 python3.9 -m venv venv
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 pip install -r requirements.txt
+```
 
-
-	3.	Set up environment variables:
+### 3.	Set up environment variables:
 
 export NOTION_API_KEY="your_notion_api_key"
 export NOTION_DATABASE_ID="your_notion_database_id"
 
 
-	4.	Run the application:
+### 4.	Run the application:
 
 python main.py
 
 
 
-Roadmap
+## Roadmap
+
 	•	Implement feed parsing for automated article collection.
 	•	Enhance summarization using fine-tuned models.
 	•	Improve UI/UX for interacting with collected summaries.
 	•	Add support for multiple knowledge bases.
 	•	Future Integration: Obsidian – Export summaries and structured data to Obsidian for deeper personal knowledge management.
 
-Contributing
+## Contributing
 
 Feel free to contribute by submitting issues or pull requests. Any suggestions to improve Nous are welcome!
 
