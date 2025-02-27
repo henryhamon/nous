@@ -39,28 +39,52 @@ pip install -r requirements.txt
 
 Create a .env file in the root directory and add your credentials
 
- ```sh
-NOTION_API_KEY=your_notion_api_key
+ ```yaml
+NOTION_TOKEN=your_notion_api_key
 NOTION_DATABASE_ID=your_notion_database_id
+LLM=ollama # or anthropic, google, llama
+LLM_MODEL=llama3
+LLM_APIKEY=nonononononnonono
  ```
+
+### 3.1. Configure Schedule Interval
+
+Set the `SCHEDULE_INTERVAL` in your `.env` file to control how often the application checks for new articles. Available options are:
+
+| Interval | Value | Description |
+|----------|--------|-------------|
+| 10 minutes | `10min` | Checks every 10 minutes |
+| 25 minutes | `25min` | Checks every 25 minutes |
+| Hourly | `hourly` | Checks once every hour (default) |
+| Every 2 hours | `2hours` | Checks every 2 hours |
+| Daily | `daily` | Checks once per day |
+
+Example:
+
+ ```yaml
+SCHEDULE_INTERVAL=10min
+ ```
+
 ### 4. Create a Notion Database
 
 You must create a database on Notion with the following properties:
 
-Property Name	Type
-Content	Text
-Date	Date
-Keywords	Multi-select
-Description	Text
-Summary	checkbox
-Abstract	Text
-URL	URL
-Read	Checkbox
+| Property Name | Type |
+|--------------|------|
+| Content | Text |
+| Date | Date |
+| Keywords | Multi-select |
+| Description | Text |
+| Summary | Checkbox |
+| Abstract | Text |
+| URL | URL |
+| Read | Checkbox |
 
 	1.	Open Notion and create a new database.
 	2.	Add the properties listed above.
 	3.	Copy the Database ID from the URL (it appears after notion.so/ and before the question mark).
- 
+
+
 ### 5.	Run the application:
 
  ```sh
