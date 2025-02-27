@@ -17,6 +17,7 @@ Nous is a personal project designed to enhance productivity by leveraging Large 
 - **Notion API**: Storing and organizing article summaries.  
 - **LiteQueue**: Lightweight task queue for managing article processing.
 - **python-dotenv**: Manages environment variables.  
+- **Schedule**: Handles periodic task scheduling.
 
 ## Setup
 
@@ -45,6 +46,7 @@ NOTION_DATABASE_ID=your_notion_database_id
 LLM=ollama # or anthropic, google, llama
 LLM_MODEL=llama3
 LLM_APIKEY=nonononononnonono
+LITEQUEUE_DB=./queue.sqlite3
  ```
 
 ### 3.1. Configure Schedule Interval
