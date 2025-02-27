@@ -168,18 +168,25 @@ class NotionClient:
     def database_queue(self, unread = True):
         url = f"{self._get_url("databases")}{self.database_id}/query"
         try:
-            payload = {}
-            if (unread):
-                payload = {"filter": {"property": "Summary",
+            payload = {"filter": {"property": "Queued",
                         "checkbox": {
                             "equals": False
                         }}}
+            if (unread):
+                payload = {"filter": {"and": [{"property": "Summary",
+                        "checkbox": {
+                            "equals": False
+                        }},{"property": "Queued",
+                        "checkbox": {
+                            "equals": False
+                        }}]}}
             response = self._post(url, payload)
             if response.status_code == 200:
                 data = response.json()
                 for item in data["results"]:
                     page = {}
                     page["id"] = item["id"]
+                    page["database_id"] = self.database_id
                     page["date"] = item["properties"]["Date"]["date"]
                     page["summary"] = item["properties"]["Summary"]["checkbox"]
                     if (page["date"] is None):
@@ -190,6 +197,7 @@ class NotionClient:
                         if (self.queue is None):
                             continue
                         self.queue.put(page_str)
+                        self.page_queued(page["id"])
 
         except Exception as e:
             return self._handle_error(e)
@@ -209,6 +217,13 @@ class NotionClient:
     def page_date_update(self, page_id, date):
         try:
             payload = {"Date": {"type": "date","date": {"start": date}}}
+            self.page_update(page_id, payload)
+        except Exception as e:
+            return self._handle_error(e)
+
+    def page_queued(self, page_id):
+        try:
+            payload = {"Queued": {"type": "checkbox","checkbox": True }}
             self.page_update(page_id, payload)
         except Exception as e:
             return self._handle_error(e)

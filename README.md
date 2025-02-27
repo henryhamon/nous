@@ -80,6 +80,7 @@ You must create a database on Notion with the following properties:
 | Summary | Checkbox |
 | Abstract | Text |
 | URL | URL |
+| Queued | Checkbox |
 | Read | Checkbox |
 
 	1.	Open Notion and create a new database.
