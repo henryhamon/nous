@@ -5,6 +5,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from litequeue import LiteQueue
 from utils.NotionClient import NotionClient
+import TaskProcessor
 
 # Load environment variables
 load_dotenv()
@@ -31,7 +32,10 @@ def task():
         exit(1)
 
     notion = NotionClient.new(NOTION_TOKEN, NOTION_DATABASE_ID, QUEUE)
+    processor = TaskProcessor.Processor(QUEUE)
     try:
+        if not QUEUE.empty():
+            processor.run()
         notion.database_queue()
     except Exception as e:
         print(e)

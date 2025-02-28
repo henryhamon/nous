@@ -2,3 +2,6 @@ python-dotenv
 schedule
 requests
 litequeue
+langchain
+langchain-community
+langchain-ollama
