@@ -5,3 +5,4 @@ litequeue
 langchain
 langchain-community
 langchain-ollama
+bs4

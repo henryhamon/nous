@@ -153,6 +153,17 @@ class NotionClient:
         output = " \n ".join(self.retrieving_blocks(page_id))
         return output
 
+    def get_page_url(self, page_id):
+        url = f"{self._get_url('pages')}{page_id}"
+        try:
+            response = self._get(url)
+            if response.status_code == 200:
+                data = response.json()
+                return data["properties"]["URL"]["url"]
+        except Exception as e:
+            return self._handle_error(e)
+        return 
+
     def get_database(self):
         url = f"{self._get_url("databases")}{self.database_id}"
         try:

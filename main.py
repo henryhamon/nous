@@ -44,11 +44,11 @@ def task():
     notion = NotionClient.new(NOTION_TOKEN, NOTION_DATABASE_ID, QUEUE)
     processor = TaskProcessor.Processor(QUEUE)
     try:
+        logging.info("Processing Notion database queue")
+        notion.database_queue()
         if not QUEUE.empty():
             logging.info("Queue is not empty, running processor")
             processor.run()
-        logging.info("Processing Notion database queue")
-        notion.database_queue()
         logging.info("Task finished")
     except Exception as e:
         logging.exception(f"An error occurred during task execution: {e}")
@@ -56,7 +56,7 @@ def task():
 
 SCHEDULE_CONFIGS = {
     '5min': lambda: schedule.every(5).minutes.do(task),
-    '10min': lambda: schedule.every(10).minutes.do(task),
+    '10min': lambda: schedule.every(2).minutes.do(task),
     '25min': lambda: schedule.every(25).minutes.do(task),
     'hourly': lambda: schedule.every().hour.do(task),
     '2hours': lambda: schedule.every(2).hours.do(task),

@@ -8,6 +8,8 @@ from utils.ThemeExtractor import ThemeExtractor
 from utils.Summarizer import TextSummarizer
 import json
 import logging
+import requests
+from bs4 import BeautifulSoup
 
 class Processor:
     def __init__(self, queue: LiteQueue):
@@ -18,11 +20,13 @@ class Processor:
 
         self.queue = queue
         self.notion = None
+        self.task_id = None
 
         logging.info("Initializing TaskProcessor...")
         
-        if self.queue.empty():
-            raise ValueError("Queue is empty")
+        if ((self.queue.empty()) or (self.queue.qsize() < 1)):
+            logging.info("Queue is empty")
+            return
             
         try:
             logging.info("Popping a task from the queue...")
@@ -32,10 +36,23 @@ class Processor:
             
             task_data = json.loads(task.data)
             logging.debug(f"Task data: {task_data}")
+            self.task_id = task.message_id
             self.page_id = task_data["id"]
             self.notion = NotionClient.new(self.NOTION_TOKEN, task_data["database_id"])
             logging.info(f"Fetching content for page ID: {self.page_id}")
             self.content = self.notion.get_page(self.page_id)
+
+            # Check if content is empty or None, if so, get the URL and scrape the content.
+            if not self.content:
+                logging.warning(f"Content for page ID {self.page_id} is empty. Attempting to scrape from URL.")
+                self.page_url = self.notion.get_page_url(self.page_id)
+                if self.page_url:
+                    logging.info(f"Scraping content from URL: {self.page_url}")
+                    self.content = self.scrape_content_from_url(self.page_url)
+                else:
+                    logging.error(f"Failed to fetch content for: {self.page_id}")
+                    pass
+
             logging.info(f"Content fetched successfully for page ID: {self.page_id}")
         except Exception as e:
             logging.error(f"Failed to initialize processor: {str(e)}")
@@ -67,6 +84,21 @@ class Processor:
             logging.debug(f"Summary processing result: {summary_result}")
         return summary_result
 
+    def scrape_content_from_url(self, url):
+        """Scrapes text content from a given URL using BeautifulSoup."""
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an exception for bad status codes
+            soup = BeautifulSoup(response.content, 'html.parser')
+            text_content = soup.get_text(separator=' ', strip=True)
+            return text_content
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error scraping content from {url}: {e}")
+            return ""
+        except Exception as e:
+            logging.error(f"An unexpected error occurred during scraping from {url}: {e}")
+            return ""
+
     def run(self):
         if self.notion is None:
             logging.error("Processor not properly initialized")
@@ -93,10 +125,14 @@ class Processor:
 
             if summary_result:
                 logging.info(f"Updating Notion page {self.page_id} with summary...")
-                self.notion.page_add_summary(self.page_id, summary_result)
+                self.notion.page_add_summary(self.page_id, summary_result[:2000])
                 logging.info(f"Notion page {self.page_id} updated with summary.")
             else:
                 logging.warning(f"Notion page {self.page_id} not update with summary, since not result")
+            
+            if self.task_id is not None:
+                logging.info(f"Marking task {self.task_id} as done...")
+                self.queue.done(self.task_id)
         except Exception as e:
             logging.error(f"Failed to process task: {str(e)}")
             raise RuntimeError(f"Failed to process task: {str(e)}")
