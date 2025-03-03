@@ -21,6 +21,7 @@ class Processor:
         self.queue = queue
         self.notion = None
         self.task_id = None
+        page_url = None
 
         logging.info("Initializing TaskProcessor...")
         
@@ -45,13 +46,17 @@ class Processor:
             # Check if content is empty or None, if so, get the URL and scrape the content.
             if not self.content:
                 logging.warning(f"Content for page ID {self.page_id} is empty. Attempting to scrape from URL.")
-                self.page_url = self.notion.get_page_url(self.page_id)
-                if self.page_url:
-                    logging.info(f"Scraping content from URL: {self.page_url}")
-                    self.content = self.scrape_content_from_url(self.page_url)
+                page_url = self.notion.get_page_url(self.page_id)
+                if page_url:
+                    logging.info(f"Scraping content from URL: {page_url}")
+                    self.content = self.scrape_content_from_url(page_url)
+                    if (self.content == ""):
+                        queue.mark_failed(self.task_id)
+                        logging.error(f"Failed to fetch content for: {page_url}")
                 else:
+                    queue.mark_failed(self.task_id)
                     logging.error(f"Failed to fetch content for: {self.page_id}")
-                    pass
+                    return
 
             logging.info(f"Content fetched successfully for page ID: {self.page_id}")
         except Exception as e:
@@ -86,18 +91,29 @@ class Processor:
 
     def scrape_content_from_url(self, url):
         """Scrapes text content from a given URL using BeautifulSoup."""
-        try:
-            response = requests.get(url)
-            response.raise_for_status()  # Raise an exception for bad status codes
-            soup = BeautifulSoup(response.content, 'html.parser')
-            text_content = soup.get_text(separator=' ', strip=True)
-            return text_content
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Error scraping content from {url}: {e}")
-            return ""
-        except Exception as e:
-            logging.error(f"An unexpected error occurred during scraping from {url}: {e}")
-            return ""
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        max_retries = 3
+        retry_delay = 2  # seconds
+    
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(url, headers=headers)
+                response.raise_for_status()
+                soup = BeautifulSoup(response.content, 'html.parser')
+                text_content = soup.get_text(separator=' ', strip=True)
+                return text_content
+            except requests.exceptions.RequestException as e:
+                logging.error(f"Attempt {attempt + 1}/{max_retries} failed: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                    continue
+                logging.error(f"Error scraping content from {url}: {e}")
+                return ""
+            except Exception as e:
+                logging.error(f"An unexpected error occurred during scraping from {url}: {e}")
+                return ""
 
     def run(self):
         if self.notion is None:
