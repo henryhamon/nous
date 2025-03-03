@@ -56,7 +56,7 @@ def task():
 
 SCHEDULE_CONFIGS = {
     '5min': lambda: schedule.every(5).minutes.do(task),
-    '10min': lambda: schedule.every(2).minutes.do(task),
+    '10min': lambda: schedule.every(10).minutes.do(task),
     '25min': lambda: schedule.every(25).minutes.do(task),
     'hourly': lambda: schedule.every().hour.do(task),
     '2hours': lambda: schedule.every(2).hours.do(task),
