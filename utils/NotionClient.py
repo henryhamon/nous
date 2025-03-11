@@ -5,6 +5,20 @@ from litequeue import LiteQueue
 class NotionClient:
     API_VERSION = "2022-06-28"
     BASE_URL = "https://api.notion.com/v1"
+    NEWS_FILTER = {"filter": {"and": [{"property": "Summary",
+                        "checkbox": {
+                            "equals": True
+                        }},{"property": "Read",
+                        "checkbox": {
+                            "equals": False
+                        }}]},
+                "sorts": [
+                        {
+                            "property": "Date",
+                            "direction": "ascending"
+                        }
+                    ]
+            }
     
     def __init__(self, token: str, database_id: str, queue: LiteQueue = None):
         """
@@ -176,40 +190,84 @@ class NotionClient:
             return self._handle_error(e)
         return response
 
-    def database_queue(self, unread = True):
-        url = f"{self._get_url("databases")}{self.database_id}/query"
+    def database_queue(self, filter = None):
+        url = f"{self._get_url('databases')}{self.database_id}/query"
+        output = {}
         try:
-            payload = {"filter": {"property": "Queued",
-                        "checkbox": {
-                            "equals": False
-                        }}}
-            if (unread):
-                payload = {"filter": {"and": [{"property": "Summary",
-                        "checkbox": {
-                            "equals": False
-                        }},{"property": "Queued",
-                        "checkbox": {
-                            "equals": False
-                        }}]}}
+            payload = {"filter": {"and": [{"property": "Summary",
+                    "checkbox": {
+                        "equals": False
+                    }},{"property": "Queued",
+                    "checkbox": {
+                        "equals": False
+                    }}]}}
+            if (filter is not None):
+                payload = filter
             response = self._post(url, payload)
             if response.status_code == 200:
                 data = response.json()
+                # Add check for results
+                if not data or "results" not in data:
+                    print("Warning: No results found in response")
+                    return output
+
                 for item in data["results"]:
+                    if not item or "properties" not in item:
+                        print(f"Warning: Invalid item structure: {item}")
+                        continue
+                        
                     page = {}
-                    page["id"] = item["id"]
+                    page["id"] = item.get("id")
+                    page["url"] = item.get("url")
                     page["database_id"] = self.database_id
-                    page["date"] = item["properties"]["Date"]["date"]
-                    page["summary"] = item["properties"]["Summary"]["checkbox"]
-                    if (page["date"] is None):
+                    
+                    # Safer property access with default values
+                    properties = item.get("properties", {})
+                    date_prop = properties.get("Date", {})
+                    date_value = date_prop.get("date", {})
+                    page["date"] = date_value.get("start") if date_value else None
+                    
+                    page["summary"] = properties.get("Summary", {}).get("checkbox", False)
+
+                    if page["date"] is None and "created_time" in item:
                         self.page_date_update(page["id"], item["created_time"][0:10])
 
-                    if (page["summary"] is False):
+                    if not page["summary"]:
                         page_str = json.dumps(page)
-                        if (self.queue is None):
-                            continue
-                        self.queue.put(page_str)
-                        self.page_queued(page["id"])
+                        if self.queue is not None:
+                            self.queue.put(page_str)
+                            self.page_queued(page["id"])
 
+                    content = properties.get("Content", {"title": []})
+                    page["title"] = ""
+                    for txt in content["title"]:
+                        if txt["type"] == "text":
+                            page["title"] += txt.get("text").get("content")
+                    # Safer property access for Read and Abstract
+                    read_prop = properties.get("Read", {"checkbox": True})
+                    if read_prop is not True:
+                        output[page["date"]] = output.get(page["date"], [])
+                        description_pop = properties.get("Description", {"rich_text": []}) 
+                        description = ""
+                        for desc in description_pop["rich_text"]:
+                            description += desc.get("plain_text","")
+                        page["description"] = description
+
+                        keywords = properties.get("Keywords", {"multi_select": []}) 
+                        page["tag"] = ""
+                        for keyword in keywords["multi_select"]:
+                            page["tag"] += f" {keyword['name']}, "
+
+                        abstract = ""
+                        abstract_prop = properties.get("Abstract")
+                        if abstract_prop is not None:
+                            for chunk in abstract_prop.get("rich_text", []):
+                                if isinstance(chunk, dict) and "text" in chunk:
+                                    abstract += chunk["text"].get("content", "")
+                            page["abstract"] = abstract
+                            output[page["date"]].append(page)
+
+            return output
         except Exception as e:
             return self._handle_error(e)
     

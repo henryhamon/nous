@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import time
 import schedule
@@ -41,12 +43,13 @@ def task():
         logging.error("Please set NOTION_DATABASE_ID in your .env file")
         exit(1)
 
+    QUEUE.prune(False) # Delete `DONE` messages
     notion = NotionClient.new(NOTION_TOKEN, NOTION_DATABASE_ID, QUEUE)
     processor = TaskProcessor.Processor(QUEUE)
     try:
         logging.info("Processing Notion database queue")
         notion.database_queue()
-        if not QUEUE.empty():
+        if ((not QUEUE.empty()) or (QUEUE.qsize() > 0)):
             logging.info("Queue is not empty, running processor")
             processor.run()
         logging.info("Task finished")
@@ -55,6 +58,7 @@ def task():
         return None
 
 SCHEDULE_CONFIGS = {
+    '2min': lambda: schedule.every(2).minutes.do(task),
     '5min': lambda: schedule.every(5).minutes.do(task),
     '10min': lambda: schedule.every(10).minutes.do(task),
     '25min': lambda: schedule.every(25).minutes.do(task),
