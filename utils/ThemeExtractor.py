@@ -76,20 +76,39 @@ class ThemeExtractor:
         result = chain.invoke({"context": docs})
         # Split result into theme and keywords sections
         theme_section = ""
-        keywords = ""
+        keywords = []
         
         # Extract theme and keywords using regex
         match = re.search("\\*\\*Main Theme:\\*\\*(.*?)\\*\\*Keywords:\\*\\*(.*)", result, re.DOTALL)
         
         if match:
             theme_section = match.group(1).strip()
-            keywords = match.group(2).strip()
+            keywords_text = match.group(2).strip()
             # Split keywords by comma, newline or bullet points
-            keywords = [k.strip('- ') for k in re.split(r',|\n|- ', keywords) if k.strip('- ')]
+            raw_keywords = [k.strip('- ') for k in re.split(r',|\n|- ', keywords_text) if k.strip('- ')]
+
+            # Clean up each keyword
+            for keyword in raw_keywords:
+                # Remove common patterns and clean up
+                cleaned = keyword.strip()
+                # Remove numbering (e.g., "1. ", "2. ")
+                cleaned = re.sub(r'^\d+\.\s*', '', cleaned)
+                # Remove asterisks
+                cleaned = re.sub(r'\*+', '', cleaned)
+                cleaned = re.sub(r'^\*\s*', '', cleaned)
+                # Remove dashes at start
+                cleaned = re.sub(r'^-\s*', '', cleaned)
+                # Remove any remaining leading/trailing whitespace
+                cleaned = cleaned.strip()
+                # Convert to lowercase
+                cleaned = cleaned.lower()
+                
+                if cleaned:  # Only add non-empty keywords
+                    keywords.append(cleaned)
         else:
             # Fallback if pattern not found
             theme_section = result
-            keywords = ""
+            keywords = []
 
         
         return {
