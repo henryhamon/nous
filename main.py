@@ -45,12 +45,12 @@ def task():
 
     QUEUE.prune(False) # Delete `DONE` messages
     notion = NotionClient.new(NOTION_TOKEN, NOTION_DATABASE_ID, QUEUE)
-    processor = TaskProcessor.Processor(QUEUE)
     try:
         logging.info("Processing Notion database queue")
         notion.database_queue()
-        if ((not QUEUE.empty()) or (QUEUE.qsize() > 0)):
+        if not QUEUE.empty():
             logging.info("Queue is not empty, running processor")
+            processor = TaskProcessor.Processor(QUEUE)
             processor.run()
         logging.info("Task finished")
     except Exception as e:
